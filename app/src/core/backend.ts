@@ -9,7 +9,8 @@ import { getRateLimitResetTimeFromResponse } from './utils';
 import { importChat } from './chat/chat-persistance';
 import sendLog from './utils/sendLogs';
 
-const endpoint = '/chatapi';
+// const endpoint = '/chatapi';
+const endpoint = 'http://207.148.24.227:3000/chatapi';
 
 export let backend: {
     current?: Backend | null

@@ -1,4 +1,5 @@
-const endpoint = '/chatapi';
+// const endpoint = '/chatapi';
+const endpoint = 'http://207.148.24.227:3000/chatapi';
 
 export default class AgentCore{
     async startGoal(goal: string, model: string) {

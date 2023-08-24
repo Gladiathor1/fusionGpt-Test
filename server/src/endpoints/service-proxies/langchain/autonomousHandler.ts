@@ -23,11 +23,10 @@ class AutonomousServiceHandler {
 
   async start_goal_agent({ goal }: { goal: string }): Promise<string[]> {
 
-    logger.write(`Starting goal agent with goal: ${goal}...`)
 
     const completion: any = await new LLMChain({ llm: this.model_settings, prompt: start_goal_prompt }).call({ goal: goal, language: this._language });
 
-    logger.write(`got response for the current goal`)
+    logger.write(`Got tasks for the goal: ${goal}`)
     logger.write(`Parsing the response...`)
 
     const task_output_parser = new TaskOutputParser({ completed_tasks: [] });
@@ -43,8 +42,6 @@ class AutonomousServiceHandler {
 
   async analyze_task_agent({ goal, task, tool_names }: { goal: any, task: any, tool_names?: string[] }) {
     try {
-      logger.write(`Analyzing task${task}...`)
-      // const llm = create_model(this.model_settings);
       const chain = new LLMChain({ llm: this.model_settings, prompt: analyze_task_prompt });
 
       logger.write(`Task analysis prompt created`)
@@ -96,22 +93,24 @@ class AutonomousServiceHandler {
   async execute_task_agent({ goal, task, analysis }: { goal: string, task: string, analysis: {action: string, arg: string, reasoning: string} }): Promise<StreamingResponse> {
     try {
 
-      logger.write(`Executing task ${task}...`)
       logger.write(`Finding tool for action ${analysis.action}...`)
 
-      const tool_class = config.tools.find((tool: any) => tool === analysis.action);
+      let tool_class: any = config.tools
+      tool_class = tool_class.find((tool: any) => tool === analysis.action);
 
 
       if(!tool_class) {
-        logger.write(`Tool class not found for action: ${analysis.action}`, "error")
-        return "NOTHING"
+        logger.write(`Tool not found for executing action: ${analysis.action}`, "error")
+        return {
+          text: `Sorry, I'm unable to execute this task with the following details agent provided: ${analysis.action}`
+        }
       }
 
-      logger.write(`Tool class found for action: ${analysis.action}`)
-      logger.write(`Getting tool for action ${analysis.action}...`)
+      logger.write(`Tool found for executing action: ${analysis.action}`)
+      logger.write(`Getting ready the '${tool_class}' tool for executing action ${analysis.action}...`)
       const getTool = new ToolToUse(this.model_settings, tool_class)
 
-      logger.write(`executing tool for action ${analysis.action}`)
+      logger.write(`Executing task with '${tool_class}' for the action ${analysis.action}`)
 
       const taskResult =  await getTool.get_tool_result({
         goal: goal,
@@ -119,7 +118,7 @@ class AutonomousServiceHandler {
         analysis,
       })
 
-      if(taskResult) logger.write(`Task executed successfully`)
+      if(taskResult) logger.write(`Task execution completed`)
       else {
         logger.write(`Error executing task: ${analysis.action}`, "error")
         logger.write(`Task execution failed with the following details: ${taskResult}`, "error")
@@ -130,7 +129,7 @@ class AutonomousServiceHandler {
       }
 
 
-      logger.write("Sending the response with task execution result")
+      logger.write(`Preparing and returing execution results: ${typeof taskResult === "object" ? JSON.stringify(taskResult) : taskResult}`)
 
       return taskResult;
     }catch(e){

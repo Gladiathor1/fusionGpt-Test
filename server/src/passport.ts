@@ -4,16 +4,16 @@ import passport from 'passport';
 import session from 'express-session';
 import createSQLiteSessionStore from 'connect-sqlite3';
 import { Strategy as LocalStrategy } from 'passport-local';
-import ChatServer from './index';
 import { config } from './config';
+import ChatServer from '.';
 
 const secret = config.authSecret;
 
-export function configurePassport(context: ChatServer) {
+export function configurePassport(context:ChatServer) {
     const SQLiteStore = createSQLiteSessionStore(session);
     const sessionStore = new SQLiteStore({ db: 'sessions.db' });
 
-    passport.use(new LocalStrategy(async (email: string, password: string, cb: any) => {
+    passport.use(new LocalStrategy(async (email, password, cb) => {
         const user = await context.database.getUser(email);
 
         if (!user) {
@@ -35,15 +35,15 @@ export function configurePassport(context: ChatServer) {
         }
     }));
 
-    passport.serializeUser((user: any, cb: any) => {
+    passport.serializeUser((user:any, cb) => {
         process.nextTick(() => {
             cb(null, { id: user.id, username: user.username });
         });
     });
 
-    passport.deserializeUser((user: any, cb: any) => {
+    passport.deserializeUser((user:any, cb) => {
         process.nextTick(() => {
-            return cb(null, user);
+            cb(null, user);
         });
     });
 
@@ -53,27 +53,26 @@ export function configurePassport(context: ChatServer) {
         saveUninitialized: false,
         store: sessionStore as any,
     }));
+
     context.app.use(passport.authenticate('session'));
 
-    context.app.post('/chatapi/login', passport.authenticate('local', {
-        successRedirect: '/',
-        failureRedirect: '/?error=login'
-    }));
 
-    context.app.post('/chatapi/register', async (req, res, next) => {
+    // Authentication endpoints
+    context.app.post('/chatapi/login', passport.authenticate('local'), (req, res) => {
+        res.json({ session: req.session });
+    });
+
+    context.app.post('/chatapi/register', async (req, res) => {
         const { username, password } = req.body;
 
         const hashedPassword = await bcrypt.hash(password, 12);
 
         try {
             await context.database.createUser(username, Buffer.from(hashedPassword));
-
-            passport.authenticate('local')(req, res, () => {
-                res.redirect('/');
-            });
+            res.json({ session: req.session });
         } catch (err) {
             console.error(err);
-            res.redirect('/?error=register');
+            res.status(500).json({ error: 'Registration failed' });
         }
     });
 
@@ -82,7 +81,7 @@ export function configurePassport(context: ChatServer) {
             if (err) {
                 return next(err);
             }
-            res.redirect('/');
         });
+        res.json({ session: req.session });
     });
 }

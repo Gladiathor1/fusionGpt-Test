@@ -1,7 +1,0 @@
-{
-  "scripts": {
-    "server": "npm run start --prefix server",
-    "app": "npm run start --prefix app",
-    "dev": "concurrently \"npm run server\" \"npm run app\""
-  }
-}

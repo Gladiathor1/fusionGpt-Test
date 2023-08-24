@@ -43,7 +43,7 @@ export function LoginModal(props: any) {
     const onClose = useCallback(() => dispatch(closeModals()), [dispatch]);
     const onCreateAccountClick = useCallback(() => dispatch(openSignupModal()), [dispatch]);
 
-    return <Modal opened={!ctx.authenticated} onClose={()=>{}} withCloseButton={false}>
+    return <Modal opened={false} onClose={()=>{}} withCloseButton={false}>
         <Container action="/chatapi/login" method="post">
             <h2>
                 <FormattedMessage defaultMessage={"Sign in"} />

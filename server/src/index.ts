@@ -41,7 +41,7 @@ if (process.env.CI) {
     setTimeout(() => process.exit(), 10000);
 }
 
-const port = process.env.PORT ? parseInt(process.env.PORT, 10) : 3001;
+const port = process.env.PORT ? parseInt(process.env.PORT, 10) : 443;
 
 export default class ChatServer {
     authProvider = 'local';
@@ -54,13 +54,14 @@ export default class ChatServer {
     }
 
     async initialize() {
-        //const { default: helmet } = await import('helmet');
-        //this.app.use(helmet());
-        // this.app.use((req,res)=>{
-        //     res.setHeader("Access-Control-Allow-Origin", "*")
-        //     res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
-        //     res.setHeader("Access-Control-Allow-Headers", "X-Requested-With,content-type")            
-        // })
+        const { default: helmet } = await import('helmet');
+        this.app.use(helmet());
+        this.app.use((req,res, next)=>{
+            res.setHeader("Access-Control-Allow-Origin", "*")
+            res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+            res.setHeader("Access-Control-Allow-Headers", "X-Requested-With,content-type")            
+            next()
+        })
         this.app.set('trust proxy', 1)
 
         this.app.use(express.urlencoded({ extended: true }));
@@ -147,7 +148,7 @@ export default class ChatServer {
             }
 
             this.app.get('/', (req, res) => {
-                res.send(indexSource);
+                res.send("hello");
             });
 
             this.app.use(express.static('public'));
@@ -163,7 +164,7 @@ export default class ChatServer {
 
         try {
             const callback = (https = false) => {
-                console.log(`Open ${config.publicSiteURL || `http${https ? 's' : ''}://localhost:3000`} in your browser.`);
+                console.log(`Open ${config.publicSiteURL || `http${https ? 's' : ''}://localhost:${port} <-` } in your browser.`);
             };
 
             if (config.tls?.key && config.tls?.cert) {

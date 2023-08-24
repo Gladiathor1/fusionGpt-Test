@@ -82,9 +82,9 @@ export default class Logger {
         let date:string 
 
         if(!getTime){
-            date = `${today.getFullYear()}-${today.getMonth()}-${today.getDate()}`
+            date = `${today.getFullYear()}-${today.getMonth()+1}-${today.getDate()}`
         }else{
-            date = `${today.getFullYear()}-${today.getMonth()}-${today.getDate()} ${today.getHours()}:${today.getMinutes()}:${today.getSeconds()}`
+            date = `${today.getFullYear()}-${today.getMonth()+1}-${today.getDate()} ${today.getHours()}:${today.getMinutes()}:${today.getSeconds()}`
         }
 
         return date;

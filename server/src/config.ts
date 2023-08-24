@@ -108,6 +108,11 @@ let config: Config = {
         max: 100,
         windowMs: 60 * 1000, // 1 minute
     },
+    tls: {
+        selfSigned: true,
+        cert: 'cert.crt',
+        key: 'cert.key',
+    },
     services: {
         openai: {
             apiKey: process.env.OPENAI_API_KEY,
